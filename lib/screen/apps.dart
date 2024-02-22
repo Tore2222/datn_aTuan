@@ -1,5 +1,8 @@
+import 'package:class_management/box/TVbutton.dart';
 import 'package:class_management/box/custom_card.dart';
+import 'package:class_management/screen/TV.dart';
 import 'package:class_management/screen/airquality.dart';
+import 'package:class_management/screen/button_on_off.dart';
 import 'package:class_management/screen/lightcontrol.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -67,10 +70,10 @@ class _AppsState extends State<Apps> with TickerProviderStateMixin {
   }
 
   void toggle_d3() {
-    if (Device[2]['status'] == 0) {
-      _databaseReference.child('device/device3/status').set(1);
+    if (Device[2]['mode'] == 0) {
+      _databaseReference.child('device/device3/mode').set(1);
     } else {
-      _databaseReference.child('device/device3/status').set(0);
+      _databaseReference.child('device/device3/mode').set(0);
     }
   }
 
@@ -82,13 +85,13 @@ class _AppsState extends State<Apps> with TickerProviderStateMixin {
     }
   }
 
-  // void toggle_d5() {
-  //   if (Device[4]['status'] == 0) {
-  //     _databaseReference.child('device/device5/status').set(1);
-  //   } else {
-  //     _databaseReference.child('device/device5/status').set(0);
-  //   }
-  // }
+  void toggle_d5() {
+    // if (Device[4]['mode'] == 10 && Device[4]['status'] == 0) {
+    //   _databaseReference.child('device/device5/mode').set(1);
+    // } else {
+    //   _databaseReference.child('device/device5/status').set(0);
+    // }
+  }
 
   // void toggle_d6() {
   //   if (Device[5]['status'] == 0) {
@@ -133,6 +136,9 @@ class _AppsState extends State<Apps> with TickerProviderStateMixin {
               if (value.containsKey('name')) {
                 settings3.add(
                   {
+                    'mode': value['mode'] != null
+                        ? int.parse(value['mode'].toString())
+                        : 0,
                     'name': value['name'].toString(),
                     'status': int.parse(value['status'].toString()),
                   },
@@ -145,7 +151,7 @@ class _AppsState extends State<Apps> with TickerProviderStateMixin {
         setState(() {
           Device = settings3;
           for (int i = 0; i < settings3.length; i++) {
-            print('settigngs3[$i] status: ${settings3[i]['status']}');
+            print('settigngs3[$i] status: ${settings3[i]['mode']}');
             print('settigngs3[$i] name: ${settings3[i]['name']}');
           }
         });
@@ -429,18 +435,20 @@ class _AppsState extends State<Apps> with TickerProviderStateMixin {
                               color: Colors.grey.shade400,
                             ),
                             title: Device[2]['name'],
-                            statusOn: "ON",
-                            statusOff: "OFF",
-                            isChecked: Device[2]['status'] == 0 ? false : true,
+                            statusOn: "Auto",
+                            statusOff: "Manual",
+                            isChecked: Device[2]['mode'] == 0 ? false : true,
                             toggle: toggle_d3,
                             onLongPress: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      LightControlScreen(deviceName: "device3"),
-                                ),
-                              );
+                              if (Device[2]['mode'] == 0) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ButtonPage(deviceName: "device3"),
+                                  ),
+                                );
+                              }
                             }),
                         CustomCard(
                           size: size,
@@ -462,7 +470,7 @@ class _AppsState extends State<Apps> with TickerProviderStateMixin {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        CustomCard(
+                        CustomCardTV(
                             size: size,
                             icon: Icon(
                               Icons.desktop_mac_rounded,
@@ -470,11 +478,18 @@ class _AppsState extends State<Apps> with TickerProviderStateMixin {
                               color: Colors.grey.shade400,
                             ),
                             title: Device[4]['name'],
-                            statusOn: "ON",
-                            statusOff: "OFF",
+                            statusOn: "",
+                            statusOff: "",
                             isChecked: Device[4]['status'] == 0 ? false : true,
-                            toggle: toggle_d3,
-                            onLongPress: () {}),
+                            toggle: toggle_d5,
+                            onLongPress: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TVRemoteControl(),
+                                ),
+                              );
+                            }),
                       ],
                     ),
                   ],
