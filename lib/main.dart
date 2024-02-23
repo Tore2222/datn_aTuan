@@ -1,4 +1,5 @@
 import 'package:class_management/firebase_options.dart';
+import 'package:class_management/screen/baochay.dart';
 
 import 'package:class_management/screen/homepage.dart';
 import 'package:class_management/screen/login_page.dart';

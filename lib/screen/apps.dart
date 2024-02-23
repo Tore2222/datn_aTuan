@@ -2,13 +2,20 @@ import 'package:class_management/box/TVbutton.dart';
 import 'package:class_management/box/custom_card.dart';
 import 'package:class_management/screen/TV.dart';
 import 'package:class_management/screen/airquality.dart';
+import 'package:class_management/screen/baochay.dart';
 import 'package:class_management/screen/button_on_off.dart';
 import 'package:class_management/screen/lightcontrol.dart';
+import 'package:class_management/screen/notification.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:assets_audio_player/assets_audio_player.dart';
 
-import 'package:provider/provider.dart';
+import 'package:audioplayers/audioplayers.dart';
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 class Apps extends StatefulWidget {
   const Apps({
@@ -20,6 +27,65 @@ class Apps extends StatefulWidget {
 }
 
 class _AppsState extends State<Apps> with TickerProviderStateMixin {
+  Future<void> showNotificationWithSound() async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'your_channel_id', // Thay đổi thành ID kênh thông báo của bạn
+      'Tên kênh',
+      playSound: true,
+      importance: Importance.high,
+      priority: Priority.high,
+      sound: RawResourceAndroidNotificationSound(
+          'coi'), // Tùy chỉnh âm thanh thông báo
+    );
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await flutterLocalNotificationsPlugin.show(
+      0, // ID thông báo
+      'Thông báo phát hiện khí gas',
+      'Mọi người cần xử lý,thoát hiểm ngay',
+      platformChannelSpecifics,
+      payload:
+          'Custom_Sound', // Payload tùy chọn để xử lý khi thông báo được nhấn
+    );
+  }
+
+  void sound() async {
+    print("test1");
+    AudioPlayer player = new AudioPlayer();
+    const alarmAudioPath = "assets/music/coi.mp3";
+    player.play(alarmAudioPath as Source);
+    AssetsAudioPlayer.newPlayer().open(Audio("assets/music/coi.mp3"));
+  }
+
+  Future<void> showNotificationWithSound1() async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'Chay', // Thay đổi thành ID kênh thông báo của bạn
+      'Tên kênh',
+      playSound: true,
+      importance: Importance.high,
+      priority: Priority.high,
+      sound: RawResourceAndroidNotificationSound(
+          'coi'), // Tùy chỉnh âm thanh thông báo
+    );
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+    sound();
+    await flutterLocalNotificationsPlugin.show(
+      0, // ID thông báo
+      'Thông báo phát hiện lửa',
+      'Mọi người cần xử lý,thoát hiểm ngay',
+      platformChannelSpecifics,
+      payload:
+          'Custom_Sound', // Payload tùy chọn để xử lý khi thông báo được nhấn
+    );
+  }
+
   int dusty = 0;
   List<Map<String, dynamic>> Device = [];
   late TabController _tabController;
@@ -45,9 +111,55 @@ class _AppsState extends State<Apps> with TickerProviderStateMixin {
     // TODO: implement initState
     _tabController = TabController(length: 4, vsync: this);
     _tabController.animateTo(2);
-
+    print('test');
     Future.delayed(const Duration(seconds: 1), () {});
+
+    _setupkhiGasStream();
+    _setupkhiBurnStream();
+    Noti.initializeNotifications(flutterLocalNotificationsPlugin);
     super.initState();
+  }
+
+  void _setupkhiGasStream() {
+    DatabaseReference gasReference1 =
+        FirebaseDatabase.instance.ref().child('/user/device/device4/gas');
+
+    gasReference1.onValue.listen((event) {
+      final dynamic data = event.snapshot.value;
+
+      if (data != null) {
+        setState(() {
+          double gas = data.toDouble();
+          print(gas);
+          // Kiểm tra nếu gas = 1 thì hiển thị thông báo kèm đổ chuông
+          if (gas == 1) {
+            print('kham');
+            showNotificationWithSound1();
+          }
+        });
+      }
+    });
+  }
+
+  void _setupkhiBurnStream() {
+    DatabaseReference burnReference1 =
+        FirebaseDatabase.instance.ref().child('/user/device/device4/fire');
+
+    burnReference1.onValue.listen((event) {
+      final dynamic data = event.snapshot.value;
+
+      if (data != null) {
+        setState(() {
+          double burn = data.toDouble();
+          print(burn);
+          // Kiểm tra nếu gas = 1 thì hiển thị thông báo kèm đổ chuông
+          if (burn == 0) {
+            print('kham');
+            showNotificationWithSound1();
+          }
+        });
+      }
+    });
   }
 
   @override
@@ -450,7 +562,7 @@ class _AppsState extends State<Apps> with TickerProviderStateMixin {
                                 );
                               }
                             }),
-                        CustomCard(
+                        CustomCardTV(
                           size: size,
                           icon: Icon(
                             Icons.fireplace_outlined,
@@ -458,11 +570,18 @@ class _AppsState extends State<Apps> with TickerProviderStateMixin {
                             color: Colors.grey.shade400,
                           ),
                           title: Device[3]['name'],
-                          statusOn: "ON",
-                          statusOff: "OFF",
+                          statusOn: "",
+                          statusOff: "",
                           isChecked: Device[3]['status'] == 0 ? false : true,
                           toggle: toggle_d4,
-                          onLongPress: () {},
+                          onLongPress: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => baochayscreen(),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
